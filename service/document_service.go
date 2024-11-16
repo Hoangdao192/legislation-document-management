@@ -30,7 +30,7 @@ func NewDocumentService(
 
 func (s *documentService) CreateDocument(ctx *gin.Context, req dto.CreateDocumentRequest) *dto.BaseResponse[*model.Document] {
 	appFile := s.fileService.CreateFile(ctx, req.File)
-	if appFile.Code == 200 {
+	if appFile.Code != 200 {
 		return MakeBadRequestResponse[*model.Document](appFile.Message)
 	}
 
@@ -39,7 +39,7 @@ func (s *documentService) CreateDocument(ctx *gin.Context, req dto.CreateDocumen
 		SourceFileId:   appFile.Data.ID,
 		PreviewFileId:  appFile.Data.ID,
 		EditableFileId: appFile.Data.ID,
-		Metadata:       req.Metadata,
+		Metadata:       req.ParsedMetadata,
 		// TODO: Assign created by
 	}
 	err := s.documentRepository.Save(ctx, &document)

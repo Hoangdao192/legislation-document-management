@@ -6,12 +6,15 @@ import (
 	"CMS/model"
 	"CMS/repository"
 	"CMS/util"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 )
 
 type FileService interface {
@@ -75,21 +78,28 @@ func (s *fileService) CreateFile(ctx *gin.Context, file *multipart.FileHeader) *
 		fileModel.Type = "pdf"
 	}
 
+	fileModel.ID = uuid.New().String()
 	fileModel.Size = stat.Size()
-	fileModel.Extension = filepath.Ext(filePath)
+	fileModel.Extension = strings.Replace(filepath.Ext(filePath), ".", "", 1)
 	fileModel.OriginalName = file.Filename
 	fileModel.MimeType = mimeType
+	fileModel.Name = fileModel.ID + "." + fileModel.Extension
 
-	fileModel.Path = filepath.Join(
-		config.ApplicationConfig.StorageDirectory, uuid.New().String()+"."+fileModel.Extension)
+	savePath := filepath.Join(
+		config.ApplicationConfig.StorageDirectory,
+		time.Now().Format("02-01-2006"))
+	_ = os.MkdirAll(savePath, os.ModePerm)
+	fileModel.Path = filepath.Join(savePath, fileModel.Name)
 
 	err = util.CopyFile(filePath, fileModel.Path)
 	if err != nil {
+		fmt.Println(err)
 		return MakeBadRequestResponse[*model.File]("Cannot save given file")
 	}
 
 	err = s.fileRepository.Save(ctx, &fileModel)
 	if err != nil {
+		fmt.Println(err)
 		return MakeBadRequestResponse[*model.File]("Cannot save given file")
 	}
 

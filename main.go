@@ -4,6 +4,7 @@ import (
 	"CMS/config"
 	"CMS/controller"
 	"CMS/dependency"
+	"CMS/model"
 	"CMS/repository"
 	"CMS/router"
 	"CMS/service"
@@ -50,6 +51,10 @@ func initRepository() {
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic(err)
+	}
+	err = db.AutoMigrate(&model.Document{}, &model.File{})
+	if err != nil {
+		return
 	}
 	fileRepository := repository.NewFileRepository(db)
 	documentRepository := repository.NewDocumentRepository(db)
