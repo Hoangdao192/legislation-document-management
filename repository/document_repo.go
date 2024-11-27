@@ -8,8 +8,8 @@ import (
 
 type DocumentRepository interface {
 	Save(context.Context, *model.Document) error
-	Delete(context.Context, string) error
-	FindById(context.Context, string) (*model.Document, error)
+	Delete(context.Context, int64) error
+	FindById(context.Context, int64) (*model.Document, error)
 	FindAll(context.Context, int, int) ([]*model.Document, error)
 }
 
@@ -25,13 +25,13 @@ func (d *documentRepository) Save(ctx context.Context, document *model.Document)
 	return d.db.WithContext(ctx).Save(document).Error
 }
 
-func (d *documentRepository) Delete(ctx context.Context, id string) error {
-	return d.db.WithContext(ctx).Delete(&model.Document{}, id).Error
+func (d *documentRepository) Delete(ctx context.Context, id int64) error {
+	return d.db.WithContext(ctx).Unscoped().Delete(&model.Document{}, id).Error
 }
 
-func (d *documentRepository) FindById(ctx context.Context, id string) (*model.Document, error) {
+func (d *documentRepository) FindById(ctx context.Context, id int64) (*model.Document, error) {
 	var document model.Document
-	err := d.db.WithContext(ctx).Model(&model.Document{}).
+	err := d.db.WithContext(ctx).Unscoped().Model(&model.Document{}).
 		First(&document, id).Error
 	if err != nil {
 		return nil, err
